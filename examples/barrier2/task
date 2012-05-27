@@ -1,0 +1,10 @@
+#!/bin/bash
+set -u -e;
+
+# ${1} — task id as assigned by demo
+
+echo "task ${1} working";
+
+sleep "$((RANDOM % 10 + 1))";
+
+echo "task ${1} done";

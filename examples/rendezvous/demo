@@ -1,0 +1,5 @@
+#!/bin/bash
+set -u;
+
+xterm -geometry 30x7 -e ./task one two&
+xterm -geometry 30x7 -e ./task two one&

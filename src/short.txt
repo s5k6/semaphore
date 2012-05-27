@@ -1,0 +1,10 @@
+sem ‹name›                                # semaphore name
+    [(-i|-I) ‹init›] [-g|-l] [-m ‹mode›]  # initialisation
+    [-t ‹secs› | -T ‹time›]               # try / timeout
+    [-w|-p|-x] [-f] [-u]                  # wait, post / fork / unlink
+    [-q] [-v ‹num›]                       # query / verbosity
+    [-- ‹command›…]                       # command to run
+         
+sem -V          # version and license information
+
+sem -h | less   # comprehensive help

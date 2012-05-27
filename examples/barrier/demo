@@ -1,0 +1,23 @@
+#!/bin/bash
+set -u -e;
+
+
+
+total=20;
+
+
+
+countMem="$(mktemp)"; echo 0 > "${countMem}";
+sem mutex -I1;
+sem barrier -I0;
+
+for i in $(seq ${total}); do
+    xterm -geometry 20x4 -e ./task "${i}" "${countMem}"&
+done;
+
+sem barrier -x;
+echo "demo rendezvous";
+
+rm -rf "${countMem}";
+sem mutex -u;
+sem barrier -u;

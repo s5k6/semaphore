@@ -1,0 +1,18 @@
+#!/bin/bash
+set -u -e;
+
+
+
+total=20;
+
+
+
+barrier="$(mktemp)";
+
+for i in $(seq ${total}); do
+    sleep "0.${RANDOM:0:1}";
+    xterm -geometry 20x4 -e ./barrier "${barrier}" -x ./task "${i}"&
+done;
+
+./barrier "${barrier}" -w;
+echo "demo rendezvous";

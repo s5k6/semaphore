@@ -1,0 +1,24 @@
+#!/bin/bash
+set -u -e;
+
+total=100;
+
+file="$(mktemp)";
+echo 0 > "${file}";
+
+sem mutex -I1;
+
+for i in $(seq ${total}); do
+    ./task "${i}" "${file}"&
+done;
+
+while lsof task >/dev/null; do
+    sleep 1;
+done;
+
+v="$(< "${file}")";
+echo "${v} == ${total}";
+
+rm "${file}";
+
+sem mutex -u;
