@@ -1,5 +1,5 @@
 
-vpcc = gcc -std=c99 -Wall -Werror
+vpcc = gcc -std=c99 -Wall -Werror -O2
 
 .PHONY: all clean
 

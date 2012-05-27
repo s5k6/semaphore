@@ -327,11 +327,11 @@ int main(int argc, char ** argv) {
     if (!global) {
       char * user = getenv("USER");
       if (user) {
-        pos += snprintf(realName + pos, maxNameLen, "%s:", user);
+        pos += snprintf(realName + pos, maxNameLen - pos, "%s:", user);
       } else {
         uid_t uid = geteuid();
         warn("Variable USER unset, using uid=%i.", uid);
-        pos += snprintf(realName + pos, maxNameLen, "%i:", uid);
+        pos += snprintf(realName + pos, maxNameLen - pos, "%i:", uid);
       }
     }
     for (char * c = name; *c; c++) {

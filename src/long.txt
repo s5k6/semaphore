@@ -27,7 +27,7 @@ Arguments
 
     -i ‹num› ― initialize semaphore to ‹num› if it has to be created.
         Without this option, fail if the semaphore does not exist.
-        The first process choosen by the OS's scheduler to create the
+        The first process chosen by the OS's scheduler to create the
         semaphore will set the value.  Also see ‘-I’.
 
     -I ‹num› ― same as ‘-i’, but force creation of semaphore, i.e.,
