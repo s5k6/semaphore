@@ -3,13 +3,10 @@ vpcc = gcc -std=c99 -Wall -Werror -O2
 doc = sem.html sem.1
 
 package = sem
-archname = $(package)-$(shell cat VERSION)_$(shell svnversion | tr : .)
+archname = $(package)-$(shell cat VERSION)r$(shell svnversion)
 archfile = $(archname).tar.bz2
 
-.PHONY: default all clean dist
-
-default :
-	cat README
+.PHONY: all clean dist install
 
 all : sem $(doc)
 

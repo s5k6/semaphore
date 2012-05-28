@@ -1,8 +1,10 @@
 
 Available make targets:
 
-make         # cat README
-make all     # makes binary and documentation
-make dist    # creates package file for distribution
-make clean   # remove created files
+    make all       # makes binary and documentation
 
+    make dist      # creates package file for distribution
+
+    make clean     # remove created files
+
+    make install   # install binaries and docs
