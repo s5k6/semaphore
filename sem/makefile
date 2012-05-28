@@ -9,12 +9,9 @@ all : sem $(doc)
 clean :
 	rm -rf sem *.inc $(doc)
 
-sem : main.c short.inc long.inc license.inc version.inc
+sem : main.c short.inc license.inc version.inc
 	$(vpcc) -o sem main.c -lrt
 	strip sem
-
-long.inc : sem.markdown
-	pandoc -f markdown -t plain -s --base-header-level=2 $< | sed 's/"/\\"/g' | sed 's/.*/"&\\n"/' > $@
 
 %.inc : %.txt
 	cat $< | sed 's/"/\\"/g' | sed 's/.*/"&\\n"/' > $@
