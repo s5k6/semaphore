@@ -9,8 +9,8 @@ all : sem $(doc)
 clean :
 	rm -rf sem *.inc $(doc)
 
-sem : main.c short.inc license.inc version.inc
-	$(vpcc) -o sem main.c -lrt
+sem : main.c short.inc license.inc
+	$(vpcc) -o sem -DVERSION='"$(shell cat VERSION)"' -DSVNVERSION='"$(shell svnversion)"' -DCOMPILED_DATE='"$(shell date)"' -DCOMPILED_BY='"$(USER)@$(shell uname -n -o -m)"' main.c -lrt
 	strip sem
 
 %.inc : %.txt

@@ -1,0 +1,37 @@
+#!/bin/bash
+set -u -e -C;
+shopt -s nullglob;
+
+
+function err { echo "ERROR $@" >&2; exit 1; }
+function warn { echo "$@" >&2; }
+
+function ask_yN {
+    local answer='';
+    read -n 1 -s -p "$* [yN]" answer;
+    if test "${answer}" = y; then
+        echo yes;
+        return 0;
+    fi;
+    echo no;
+    return 1;
+}
+
+valid=true;
+
+if svn status sem | read; then
+    ask_yN 'Cleanup ‘sem’ now?' || err 'well, then...';
+    make -C sem clean;
+    svn status sem 2>/dev/null | valid=false;
+fi;
+
+echo;
+
+archname="sem-$(cat sem/version.txt)r$(svnversion sem | tr : .)";
+
+if ${valid}; then
+    tar --exclude-vcs --transform "s ^sem ${archname} g" -c sem | bzip2 >| "${archname}.tar.bz2";
+else
+    tar --exclude-vcs --transform "s ^sem ${archname} g" -c sem | tar -t
+fi;
+

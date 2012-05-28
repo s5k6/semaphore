@@ -283,9 +283,16 @@ int main(int argc, char ** argv) {
         break;
 
       case 'V':
-        printf("\nsem version %s\n",
-#include "version.inc"
-               );
+        printf( "\n"
+                "sem version %s\n"
+                "    svnversion: %s\n"
+                "compiled\n"
+                "    date: %s\n"
+                "    by: %s\n"
+                ""
+                "\n"
+              , VERSION, SVNVERSION, COMPILED_DATE, COMPILED_BY
+              );
         exit(EXIT_SUCCESS);
         break;
 
