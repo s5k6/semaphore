@@ -48,6 +48,6 @@ clean :
 
 dist : clean
 	! svn status 2>/dev/null | read foo # fail with unversioned files
-	md5sum * > md5sum.txt;
-	md5sum -w --quiet -c md5sum.txt;
-	tar --exclude-vcs --exclude '$(archfile)' --transform 's ^\. $(archname) g' -c . | bzip2 > "$(archfile)";
+	find . -name '.svn' -prune -o -name md5sum.txt -prune -o -type f -exec md5sum {} \; > md5sum.txt;
+	md5sum --quiet -c md5sum.txt;
+	tar --exclude-vcs --exclude '$(package)-*' --transform 's ^\. $(archname) g' -c . | bzip2 > "$(archfile)";
