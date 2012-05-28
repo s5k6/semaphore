@@ -30,9 +30,9 @@ semaphores reside in different namespaces.
 Getting started
 ---------------
 
-Download the [sources](sem.tar.bz2), unpack, make, and enjoy.  The
-command ‘sem -h’ displays comprehensive [documentation](long.txt).
-It's [free](COPYING).
+Download the [sources](downloads), unpack, make, and enjoy.  `sem`
+comes with extensive [documentation](sem.html), and it's
+[free](COPYING).
 
 
 Example

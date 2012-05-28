@@ -1,24 +1,17 @@
 
-.PHONY: all clean sync sem.tar.bz2
+.PHONY: all clean online sync
 
-all : index.xhtml
-
-clean :
-	rm -rf online index.xhtml sem.tar.bz2
-
-online : index.xhtml sem.tar.bz2
-	mkdir -p online/tools/sem
-	tar -C copy -c . --exclude-vcs | tar -C online/tools/sem -vx
-	cp -t online/tools/sem index.xhtml sem.tar.bz2 ../sem/long.txt ../sem/COPYING
-	chPerm -f 644 -d 755 online
-	firefox online/tools/sem/index.xhtml
 
 index.xhtml : pandoc-template.xhtml index.txt
 	pandoc --template=pandoc-template.xhtml -t html -s -o $@ index.txt
 
-sem.tar.bz2 :
-	$(MAKE) -C ../sem clean
-	tar -C .. -c sem --exclude-vcs | bzip2 > $@
+online : index.xhtml
+	mkdir -p online/tools/sem/downloads
+	tar -C copy -c . --exclude-vcs | tar -C online/tools/sem -x
+	cp -t online/tools/sem index.xhtml ../sem/doc/sem.html ../sem/COPYING
+	cp -t online/tools/sem/downloads ../sem/sem-*
+	chPerm -f 644 -d 755 online
+	firefox online/tools/sem/index.xhtml
 
 sync : online
 	xmessage -buttons "yes:0,no:1" 'are you sure?'
