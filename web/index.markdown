@@ -12,7 +12,7 @@ Copyright © 2012 Stefan Klinger <http://stefan-klinger.de>
 Abstract
 --------
 
-The ‘sem’ command offers a versatile, yet simple frontend to named
+The `sem` command offers a versatile, yet simple frontend to named
 [system
 semaphores](http://www.kernel.org/doc/man-pages/online/pages/man7/sem_overview.7.html
 "man page").  Using semaphores instead of a [construct with
@@ -40,7 +40,7 @@ Example
 
 Imagine you use the [GraphicsMagick](http://www.graphicsmagick.org/)
 package to resize a lot of images.  The compute intensive part is the
-command ‘gm’.
+command `gm`.
 
     gm convert -resize x600 image.jpeg small-image.jpeg;
 
@@ -52,23 +52,23 @@ files, as in the following loop:
         gm convert -resize x600 "$f" "small-$f";
     done;
 
-However, only one ‘gm’-process is running at any time.  On a multicore
+However, only one `gm`-process is running at any time.  On a multicore
 machine with sufficient memory, it might be fine to run a couple of
 them concurrently.  But putting them all in the background
 simultaneously will lead to a high load and probably consume all
 memory.  So maybe just running four of them would be great.
 
-To this end, simply prefix the ‘gm’ command with a call of ‘sem’.  The
+To this end, simply prefix the `gm` command with a call of `sem`.  The
 whole loop then reads
 
     find ~/pics -iregex '.*\.jpe?g' | while read f; do
         sem foo -i4 -f -x -- gm convert -resize x600 "$f" "small-$f";
     done;
 
-By semaphore magic, you will have exactly four instances of ‘gm’
+By semaphore magic, you will have exactly four instances of `gm`
 running for most of the time — exceptions being when there are less
 than four images left to convert, and the small lapse of time when
-one ‘gm’ process has just ended and the next one has not yet been
+one `gm` process has just ended and the next one has not yet been
 launched.
 
 Enjoy!

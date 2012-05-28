@@ -2,8 +2,8 @@
 .PHONY: all clean online sync
 
 
-index.xhtml : pandoc-template.xhtml index.txt
-	pandoc --template=pandoc-template.xhtml -t html -s -o $@ index.txt
+index.xhtml : pandoc-template.xhtml index.markdown
+	pandoc --template=pandoc-template.xhtml -t html -s -o $@ index.markdown
 
 online : index.xhtml
 	mkdir -p online/tools/sem/downloads
