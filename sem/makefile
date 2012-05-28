@@ -1,38 +1,17 @@
+# /makefile
 
-vpcc = gcc -std=c99 -Wall -Werror -O2
-doc = sem.html sem.1
 
-package = sem
-archname = $(package)-$(shell cat VERSION)r$(shell svnversion)
-archfile = $(archname).tar.bz2
+# version information
 
-.PHONY: all clean dist install
+version = $(shell cat VERSION)
+svnversion = $(shell svnversion)
+compiled_date = $(shell date)
+compiled_by = $(USER)@$(shell uname -n -o -m)
 
-all : sem $(doc)
+export version svnversion compiled_by compiled_date
 
-clean :
-	rm -rf sem *.inc $(doc)
-	rm -f $(package)-* md5sum.txt
 
-sem : main.c short.inc license.inc
-	$(vpcc) -o sem -DVERSION='"$(shell cat VERSION)"' -DSVNVERSION='"$(shell svnversion)"' -DCOMPILED_DATE='"$(shell date)"' -DCOMPILED_BY='"$(USER)@$(shell uname -n -o -m)"' main.c -lrt
-	strip sem
-
-%.inc : %.txt
-	cat $< | sed 's/"/\\"/g' | sed 's/.*/"&\\n"/' > $@
-
-sem.html : sem.markdown
-	pandoc -f markdown -t html -s --base-header-level=2 -o $@ $<
-
-sem.1 : sem.markdown
-	pandoc -f markdown -t man -s -o $@ $<
-
-dist : clean
-	! svn status 2>/dev/null | read foo # fail if unversioned files
-	md5sum * > md5sum.txt;
-	md5sum -w --quiet -c md5sum.txt;
-	tar --exclude-vcs --exclude '$(archfile)' --transform 's ^\. $(archname) g' -c . | bzip2 > "$(archfile)";
-
+# variables for install
 
 ifeq ($(USER), root)
     MODE ?= 755
@@ -44,6 +23,31 @@ else
     PREFIX ?= $(HOME)/opt
 endif
 
-install : all
-	install -o $(USER) -g $(GROUP) -m $(MODE) -D sem $(PREFIX)/bin/sem
-	install -o $(USER) -g $(GROUP) -m $(MODE) -D sem.1 $(PREFIX)/man/man1/sem.1
+export USER MODE GROUP PREFIX 
+
+
+# variables for creating a package
+
+package = sem
+archname = $(package)-$(shell cat VERSION)r$(shell svnversion)
+archfile = $(archname).tar.bz2
+
+
+# phony rules
+
+.PHONY: all clean dist install
+
+all install :
+	$(MAKE) -C src $@
+	$(MAKE) -C doc $@
+
+clean :
+	rm -f $(package)-* md5sum.txt
+	$(MAKE) -C src $@
+	$(MAKE) -C doc $@
+
+dist : clean
+	! svn status 2>/dev/null | read foo # fail with unversioned files
+	md5sum * > md5sum.txt;
+	md5sum -w --quiet -c md5sum.txt;
+	tar --exclude-vcs --exclude '$(archfile)' --transform 's ^\. $(archname) g' -c . | bzip2 > "$(archfile)";
