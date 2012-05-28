@@ -1,3 +1,8 @@
-Compile with ‘make’.  See ‘long.txt’ for the manual, which is also
-included in the executable.  Run ‘sem’ without arguments for further
-help.
+
+Available make targets:
+
+make         # cat README
+make all     # makes binary and documentation
+make dist    # creates package file for distribution
+make clean   # remove created files
+

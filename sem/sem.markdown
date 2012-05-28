@@ -11,8 +11,7 @@
 # Synopsis
 
 `sem ‹name› [‹args›…] [-- ‹command›…]`    
-`sem [-h]`    
-`sem -V`    
+`sem [-L|-V]`
 
 The `sem` command offers a versatile, yet simple frontend to named
 system semaphores.  You may initialize, wait, post, or remove a
@@ -21,10 +20,11 @@ semaphore, and run a command in between.
 
 # Description
 
-Invocation without arguments, or with `-h` prints a help message, `sem
--V` causes version and license information to be printed.  Both forms
-terminate without performing any operation.  Usual invocation is the
-first form:
+Invocation without arguments prints a help message, `sem -V` causes
+version information to be printed, and `sem -L` shows license
+information.  This form terminates without performing any operation.
+
+Usual invocation is the first form:
 
     sem ‹name› [‹args›…] [-- ‹command›…]
 
