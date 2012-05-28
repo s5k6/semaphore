@@ -103,9 +103,10 @@ The arguments being as follows:
     increases by one if no value is given.
 
 `-q`
-  ~ Query semaphore value.  Note, that it is *not* save to rely on
-    this information, since it may be outdated by the time of
-    printing.  Do not use this unless for debugging purposes!
+  ~ Query semaphore value, before performing any wait/post operation.
+    Note, that it is *not* save to rely on this information, since it
+    may be outdated by the time of printing.  Do not use this unless
+    for getting a rough idea while debugging!
 
 `-E ‹offset›`
   ~ offset sem's exit codes by ‹offset›, but leave exit codes from the

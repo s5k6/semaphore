@@ -297,7 +297,7 @@ int main(int argc, char ** argv) {
         break;
 
       case 'L':
-        puts(
+        printf("\n%s\n",
 #include "license.inc"
                );
         exit(EXIT_SUCCESS);
