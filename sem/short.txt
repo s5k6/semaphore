@@ -1,3 +1,5 @@
+Extensive documentation is provided in sem(1) and as HTML file.
+
 sem ‹name›                                # semaphore name
     [(-i|-I) ‹init›] [-g|-l] [-m ‹mode›]  # initialisation
     [-t ‹secs› | -T ‹time›]               # try / timeout
@@ -5,6 +7,5 @@ sem ‹name›                                # semaphore name
     [-q] [-v ‹num›]                       # query / verbosity
     [-- ‹command›…]                       # command to run
          
-sem -V          # version and license information
-
-sem -h | less   # comprehensive help
+sem -V          # version information
+sem -L          # license information

@@ -247,15 +247,6 @@ int main(int argc, char ** argv) {
             err(UserError, "-%c takes optional integer value.", o);
         }
         break;
-
-      case 'V':
-        printf("\n%s\nsem version %s\n",
-#include "license.inc"
-               ,
-#include "version.inc"
-               );
-        exit(EXIT_SUCCESS);
-        break;
         
       case 'u':
         if (v) err(UserError, "-%c does not take arguments.", o);
@@ -286,16 +277,23 @@ int main(int argc, char ** argv) {
         query = 1;
         break;
 
-      case 'h':
-        printf("\n%s\n",
-#include "long.inc"
+      case 'g':
+        if (v) err(UserError, "-%c does not take arguments.", o);
+        global = 1;
+        break;
+
+      case 'V':
+        printf("\nsem version %s\n",
+#include "version.inc"
                );
         exit(EXIT_SUCCESS);
         break;
 
-      case 'g':
-        if (v) err(UserError, "-%c does not take arguments.", o);
-        global = 1;
+      case 'L':
+        puts(
+#include "license.inc"
+               );
+        exit(EXIT_SUCCESS);
         break;
 
       default:
