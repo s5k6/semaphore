@@ -1,0 +1,22 @@
+#!/bin/bash
+set -u -e -C;
+shopt -s nullglob;
+
+function ask_yN {
+    local answer='';
+    read -n 1 -s -p "$* [yN]" answer;
+    if test "${answer}" = y; then
+        echo yes;
+        return 0;
+    fi;
+    echo no;
+    return 1;
+}
+
+prefix='/dev/shm/sem.'; # see sem_overview(7)
+
+pattern="${1:-*}";
+
+for i in ${prefix}${pattern}; do
+    echo "/${i#${prefix}}";
+done;
