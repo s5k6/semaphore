@@ -1,5 +1,5 @@
 % sem(1)
-% Stefan Klinger
+% Stefan Klinger <http://stefan-klinger.de>
 % 2012-May-28
 
 
@@ -269,6 +269,12 @@ semaphore named “foo”, and run the command “command”. We assume
         else
            echo "command returned ${ec}";
         fi;
+
+
+# Home
+
+Updates are available from <http://stefan-klinger.de/tools/sem>.
+Please report bugs there.
 
 
 # See also

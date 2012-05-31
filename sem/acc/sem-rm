@@ -1,0 +1,24 @@
+#!/bin/bash
+set -u -e -C;
+shopt -s nullglob;
+
+function ask_yN {
+    local answer='';
+    read -n 1 -s -p "$* [yN]" answer;
+    if test "${answer}" = y; then
+        echo yes;
+        return 0;
+    fi;
+    echo no;
+    return 1;
+}
+
+prefix='/dev/shm/sem.'; # see sem_overview(7)
+
+pattern="${1:-*}";
+
+ask_yN "Remove all semaphores matching pattern ‘${pattern}’?";
+
+for i in ${prefix}${pattern}; do
+    sem /${i#${prefix}} -l -u -v;
+done;

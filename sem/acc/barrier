@@ -1,0 +1,76 @@
+#!/bin/bash
+set -u -e;
+
+function err { echo "$@" >&2; exit 1; }
+function warn { echo "$@" >&2; }
+
+if test -z "${1:-}"; then
+    cat <<EOF
+barrier -n                           # return handle of a new barrier
+barrier ‹handle› -u                  # remove barrier from system
+barrier ‹handle› -w                  # wait for barrier
+barrier ‹handle› -- ‹command›...     # run command inside barrier
+barrier ‹handle› -d                  # decrement barrier
+barrier ‹handle› -i                  # increment barrier
+EOF
+    exit;
+fi;
+
+function name {
+    counter="${1}";
+    mutex="${counter}-mutex";
+    barrier="${counter}-barrier";
+}
+
+if test "${1}" = '-n'; then
+    name "$(mktemp -t barrier.XXXXXXXXXX)";
+    echo 0 > "${counter}";
+    sem "${mutex}" -I1;
+    sem "${barrier}" -I0;
+    echo "${counter}";
+    exit 0;
+fi;
+
+test "${2:-}" || err 'What to do with the barrier?';
+
+name "${1}"; 
+
+case "${2}" in
+    
+    '-u')
+        sem "${mutex}" -u;
+        sem "${barrier}" -u;
+        rm -f "${counter}";
+        ;;
+    
+    '-w')
+        sem "${barrier}" -x;
+        ;;
+    
+    '-i')
+        sem "${mutex}" -w;
+        count="$(($(< "${counter}") + 1))";
+        echo "${count}" >| "${counter}";
+        sem "${mutex}" -p;
+        ;;
+    
+    '-d')
+        sem "${mutex}" -w;
+        count="$(($(< "${counter}") - 1))";
+        echo "${count}" >| "${counter}";
+        sem "${mutex}" -p;
+        test "${count}" -eq 0 && sem "${barrier}" -p;
+        ;;
+    
+    '--')
+        me="${0}";
+        shift 2;
+        "${me}" "${counter}" -i;
+        eval "${@}";
+        "${me}" "${counter}" -d;
+        ;;
+    
+    *)
+        err "Don't understand: ‘${2}’";
+        
+esac;

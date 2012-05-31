@@ -1,0 +1,5 @@
+This directory contains accessory scripts that rely on `sem`.
+
+‘sem-rm’ — remove all semaphores, permissions provided.  A shell-style
+    pattern may be given as first argument to restrict the search.
+
