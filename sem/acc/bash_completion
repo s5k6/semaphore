@@ -1,4 +1,8 @@
-function f {
+# -*- mode: sh -*-
+
+function sem_completion {
+    local prefix='/dev/shm/sem.'; # see sem_overview(7)
+
     if ${VERBOSE:-false}; then
         cat >&2 <<EOF;
 name of the command = ‘${1}’
@@ -12,12 +16,26 @@ COMP_WORDS = ‘${COMP_WORDS}’
 COMP_CWORD = ‘${COMP_CWORD}’
 EOF
     fi;
+
+    #declare -a COMPREPLY=();
+    if test "${2:0:1}" = '/'; then
+        # trying to find a literal name
+        for i in ${prefix}${2:1}*; do
+            COMPREPLY+=("/${i#${prefix}} -l");
+        done;
+    else
+        # trying to find an encoded name
+        return 1;
+    fi;
     
-    COMPREPLY=(aaa);
+    if ${VERBOSE:-false}; then
+        echo -n 'completions';
+        for i in "${COMPREPLY[@]}"; do echo -n " ‹${i}›"; done;
+        echo;
+    fi >&2;
     
-    ${VERBOSE:-false} && for i in "${COMPREPLY[@]}"; do echo "“${i}”"; done >&2;
-    return 0;
+    return 1;
 }
 
 complete -r sem
-complete -F f sem
+complete -F sem_completion sem
