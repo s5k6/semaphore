@@ -5,24 +5,18 @@ shopt -s nullglob;
 function err { echo "$@" >&2; exit 1; }
 function warn { echo "$@" >&2; }
 
-function ask_yN {
-    local answer='';
-    read -n 1 -s -p "$* [yN]" answer;
-    if test "${answer}" = y; then
-        echo yes;
-        return 0;
-    fi;
-    echo no;
-    return 1;
-}
-
 prefix='/dev/shm/sem.'; # see sem_overview(7)
 
 pattern="${1:-*}";
 
 found=false;
 for i in ${prefix}${pattern}; do
-    echo "/${i#${prefix}}";
+    case "${i}" in
+        "/${USER}:")
+            echo "FIXME: decode %sequences!"
+        *)
+            echo "/${i#${prefix}}";;
+    esac;
     found=true;
 done;
 

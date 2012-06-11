@@ -127,9 +127,8 @@ characters.  The first restriction leads to name clashes between
 different users, the others are annoying.
 
 `sem` avoids name clashes by prefixing each semaphore name with the
-user's name (or the effective user id if the environment variable
-$USER is unset) and a colon.  The `-g` option disables this, creating
-a “global” name.
+user's name (from the environment variable $USER) and a colon.  The
+`-g` option disables this, creating a “global” name.
 
 To allow for colons and slashes in the names, `sem` performs a poor
 variant of url-escaping (aka. %-escaping).  Note, that this may

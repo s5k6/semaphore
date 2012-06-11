@@ -43,7 +43,7 @@ void exit_offset(int const ec) {
 
 
 
-char * name = 0;
+char const * name = 0;
 
 
 
@@ -70,7 +70,7 @@ void err(int const ec, const char * fmt, ...) {
 
 
 
-/* Sorry again: I consider the argument processing implemented her
+/* Sorry again: I consider the argument processing implemented here
    superior to the GNU standard.  This is a feature, not a bug.
 
    Arguments for opt(argc, argv, &i, &o, &v):
@@ -109,11 +109,37 @@ int opt(int const argc, char * const * const argv, int * i, char * o, char ** v)
 
 
 
+
+char const * encode(char const * in, int const global, int const verbose) {
+
+  char * out = calloc(maxNameLen, sizeof(char));
+  if (!out) err(SysError, "calloc: %m.");
+  out[0] = '/';
+  int pos = 1;
+  if (!global) {
+    char * user = getenv("USER");
+    if (!user) err(UserError, "Var $USER not in environment.  Try -g or -l.");
+    pos += snprintf(out + pos, maxNameLen - pos, "%s:", user);
+  }
+  for (char const * c = in; *c; c++) {
+    if (index(":/%?* ", *c))
+      pos += snprintf(out + pos, maxNameLen - pos, "%%%0x", *c);
+    else
+      pos += snprintf(out + pos, maxNameLen - pos, "%c", *c); 
+  }
+  if (verbose > 1) warn("Real (system) name is \"%s\".", out);
+  if (pos >= maxNameLen)
+    err(UserError, "Real (system) name exceeds %i bytes.", maxNameLen - 1);
+  
+  return out;
+}
+
+
+
 int main(int argc, char ** argv) {
   
-  char ** cmd = 0
-     , * realName = 0 // system name of semaphore
-     ;
+  char ** cmd = 0;
+  char const * realName = 0; // system name of semaphore
   int daemon = 0 // fork for command execution
     , global = 0 // do not prefix with user name
     , literally = 0 // use name without encoding
@@ -323,33 +349,7 @@ int main(int argc, char ** argv) {
   
   // generate per-user or global name
 
-  if (literally) realName = name;
-  else {
-    realName = calloc(maxNameLen, sizeof(char));
-    if (!realName) err(SysError, "calloc: %m.");
-    realName[0] = '/';
-    int pos = 1;
-    if (!global) {
-      char * user = getenv("USER");
-      if (user) {
-        pos += snprintf(realName + pos, maxNameLen - pos, "%s:", user);
-      } else {
-        uid_t uid = geteuid();
-        warn("Variable USER unset, using uid=%i.", uid);
-        pos += snprintf(realName + pos, maxNameLen - pos, "%i:", uid);
-      }
-    }
-    for (char * c = name; *c; c++) {
-      if (index(":/%?* ", *c))
-        pos += snprintf(realName + pos, maxNameLen - pos, "%%%0x", *c);
-      else
-        pos += snprintf(realName + pos, maxNameLen - pos, "%c", *c); 
-    }
-    if (verbose > 1) warn("Real (system) name is \"%s\".", realName);
-    if (pos >= maxNameLen)
-      err(UserError, "Real (system) name exceeds %i bytes.", maxNameLen - 1);
-  }
-
+  realName = literally ? name : encode(name, global, verbose);
   if (rindex(realName, '/') != realName)
     err(UserError, "First character must be the slash in real semaphore name.");
 

@@ -19,6 +19,14 @@ semaphores](http://www.kernel.org/doc/man-pages/online/pages/man7/sem_overview.7
 fifos](http://stackoverflow.com/questions/2733198/command-line-semaphore-utility#2733290)
 avoids problems with concurrent initialisation.
 
+To allow for the protection of multiple commands in shell scripts, the
+level of operation is more primitive than [GNU
+sem](http://www.gnu.org/software/parallel/sem.html).
+
+`sem` comes with some auxilliary shell scripts to further facilitate
+semaphore management on Linux.  The provided `barrier` script
+implements the eponymous synchronisation pattern.
+
 The operations provided are to initialise, wait, post, and remove
 named semaphores.  Blocking and nonblocking operation is supported, as
 well as timeout.  A command may be run in between wait and post
