@@ -18,15 +18,15 @@ fi;
 
 function name {
     counter="${1}";
-    mutex="${counter}-mutex";
-    barrier="${counter}-barrier";
+    mux="barrier${counter}-mux";
+    bar="barrier${counter}-bar";
 }
 
 if test "${1}" = '-n'; then
     name "$(mktemp -t barrier.XXXXXXXXXX)";
     echo 0 > "${counter}";
-    sem "${mutex}" -I1;
-    sem "${barrier}" -I0;
+    sem "${mux}" -I1;
+    sem "${bar}" -I0;
     echo "${counter}";
     exit 0;
 fi;
@@ -38,28 +38,28 @@ name "${1}";
 case "${2}" in
     
     '-u')
-        sem "${mutex}" -u;
-        sem "${barrier}" -u;
+        sem "${mux}" -u;
+        sem "${bar}" -u;
         rm -f "${counter}";
         ;;
     
     '-w')
-        sem "${barrier}" -x;
+        sem "${bar}" -x;
         ;;
     
     '-i')
-        sem "${mutex}" -w;
+        sem "${mux}" -w;
         count="$(($(< "${counter}") + 1))";
         echo "${count}" >| "${counter}";
-        sem "${mutex}" -p;
+        sem "${mux}" -p;
         ;;
     
     '-d')
-        sem "${mutex}" -w;
+        sem "${mux}" -w;
         count="$(($(< "${counter}") - 1))";
         echo "${count}" >| "${counter}";
-        sem "${mutex}" -p;
-        test "${count}" -eq 0 && sem "${barrier}" -p;
+        sem "${mux}" -p;
+        test "${count}" -eq 0 && sem "${bar}" -p;
         ;;
     
     '--')

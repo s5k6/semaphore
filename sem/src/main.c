@@ -50,24 +50,30 @@ char const * name = 0;
 /* Sorry, I'm using my own ‘warn’ and ‘err’ functions, since I want to
    add sem's pid and the semaphore name in the output as well. */
 
-void vwarn(const char * fmt, va_list ap) {
-  if (name) fprintf(stderr, "sem[%i,%s] ", getpid(), name);
-  else fprintf(stderr, "sem[%i] ", getpid());
-  vfprintf(stderr, fmt, ap);
-  fprintf(stderr, "\n"); 
+void vout(FILE * stream, const char * fmt, va_list ap) {
+  if (name) fprintf(stream, "sem[%i,%s] ", getpid(), name);
+  else fprintf(stream, "sem[%i] ", getpid());
+  vfprintf(stream, fmt, ap);
+  fprintf(stream, "\n"); 
+}
+
+void out(const char * fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt); vout(stdout, fmt, ap); va_end(ap);
 }
 
 void warn(const char * fmt, ...) {
   va_list ap;
-  va_start(ap, fmt); vwarn(fmt, ap); va_end(ap);
+  va_start(ap, fmt); vout(stderr, fmt, ap); va_end(ap);
 }
 
 void err(int const ec, const char * fmt, ...) {
   va_list ap;
-  va_start(ap, fmt); vwarn(fmt, ap); va_end(ap);
+  va_start(ap, fmt); vout(stderr, fmt, ap); va_end(ap);
   exit(ec);
 }
 
+#define vout DO_NOT_USE_VOUT
 
 
 /* Sorry again: I consider the argument processing implemented here
@@ -127,7 +133,7 @@ char const * encode(char const * in, int const global, int const verbose) {
     else
       pos += snprintf(out + pos, maxNameLen - pos, "%c", *c); 
   }
-  if (verbose > 1) warn("Real (system) name is \"%s\".", out);
+  if (verbose > 2) warn("Real (system) name is \"%s\".", out);
   if (pos >= maxNameLen)
     err(UserError, "Real (system) name exceeds %i bytes.", maxNameLen - 1);
   
@@ -142,14 +148,13 @@ int main(int argc, char ** argv) {
   char const * realName = 0; // system name of semaphore
   int daemon = 0 // fork for command execution
     , global = 0 // do not prefix with user name
-    , literally = 0 // use name without encoding
     , oflag = 0 // do not create new semaphore
     , post = 0 // post after command
     , query = 0 // print semaphore value
     , status = 0 // exit status of command
     , timeout = 0 // timeout in seconds
     , unlink = 0 // rm semaphore after wait
-    , verbose = 0 // print info to stdout
+    , verbose = 1 // print info to stdout
     , wait = 0 // wait before command
     ;
   unsigned int init = 0; // initial value for creation
@@ -238,8 +243,7 @@ int main(int argc, char ** argv) {
         break;
 
       case 'l':
-        if (v) err(UserError, "-%c does not take arguments.", o);
-        literally = 1;
+        err(UserError, "The use of -%c is deprecated.", o);
         break;
 
       case 't':
@@ -347,9 +351,13 @@ int main(int argc, char ** argv) {
 
 
   
-  // generate per-user or global name
+  // generate per-user, or global, or system name
 
-  realName = literally ? name : encode(name, global, verbose);
+  if (name[0]=='/') {
+    if (global) err(UserError, "System name conflicts with ‘-g’.");
+    realName = name;
+  } else realName = encode(name, global, verbose);
+
   if (rindex(realName, '/') != realName)
     err(UserError, "First character must be the slash in real semaphore name.");
 
@@ -362,7 +370,8 @@ int main(int argc, char ** argv) {
     if (query) {
       int sval;
       if (sem_getvalue(sem, &sval)) err(SysError, "sem_getvalue: %m.");
-      warn("value is %i.", sval);
+      if (verbose > 0) out("value = %i", sval);
+      else printf("%i", sval);
     }
   } else {
     if (!unlink) warn("Pointless usage without semaphore operation.");
@@ -374,23 +383,23 @@ int main(int argc, char ** argv) {
   
   if (sem && wait) {
     if (timeout > 0) {
-      if (verbose > 0) warn("Timed waiting...");
+      if (verbose > 1) warn("Timed waiting...");
       if (sem_timedwait(sem, &time)) {
         if (errno == ETIMEDOUT) {
-          if (verbose>0) warn("Timeout expired.");
+          if (verbose > 0) warn("Timeout expired.");
           exit(OkError);
         } else err(SysError, "sem_timedwait: %m.");
       }
     } else if (timeout < 0) { // nonblocking
-      if (verbose > 0) warn("Trying to wait...");
+      if (verbose > 1) warn("Trying to wait...");
       if (sem_trywait(sem)) {
         if (errno == EAGAIN) {
-          if (verbose>0) warn("Wait would block.");
+          if (verbose > 0) warn("Wait would block.");
           exit(OkError);
         } else err(SysError, "sem_trywait: %m.");
       }
     } else { // block forever
-      if (verbose > 0) warn("Waiting...");
+      if (verbose > 1) warn("Waiting...");
       if (sem_wait(sem)) err(SysError, "sem_wait: %m.");
     }
   }
@@ -426,16 +435,16 @@ int main(int argc, char ** argv) {
     if (pid < 0) err(SysError, "fork: %m.");
 
     if (pid == 0) {
-      if (verbose > 1) warn("Executing %s, with pid %i.", cmd[0], getpid());
+      if (verbose > 2) warn("Executing %s, with pid %i.", cmd[0], getpid());
       execvp(cmd[0], cmd);
       err(SysError, "execvp(%s): %m.", cmd[0]);
     }
 
     // all the following stuff is run in the parent process, iff we have forked.
       
-    if (verbose > 0) warn("Waiting for process %i.", pid);
+    if (verbose > 1) warn("Waiting for process %i.", pid);
     waitpid(pid, &status, 0);
-    if (verbose > 1) {
+    if (verbose > 2) {
       if (WIFEXITED(status))
         warn("Child %i exited with code %d.", pid, WEXITSTATUS(status));
       else if (WIFSIGNALED(status))
@@ -451,7 +460,7 @@ int main(int argc, char ** argv) {
   
   if (sem && post) {
     if (sem_post(sem)) err(SysError, "sem_post: %m.");
-    if (verbose > 0) warn("Posted.");
+    if (verbose > 1) warn("Posted.");
   }
 
 
@@ -462,7 +471,7 @@ int main(int argc, char ** argv) {
     if (sem_unlink(realName)) {
       if (verbose > 0) warn("sem_unlink: %m.");
     } else {
-      if (verbose > 0) warn("Removed semaphore.");
+      if (verbose > 1) warn("Removed semaphore.");
     }
   }
 

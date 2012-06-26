@@ -5,18 +5,14 @@ shopt -s nullglob;
 function err { echo "$@" >&2; exit 1; }
 function warn { echo "$@" >&2; }
 
-prefix='/dev/shm/sem.'; # see sem_overview(7)
+prefix='/dev/shm/sem.';   # see sem_overview(7)
 
 pattern="${1:-*}";
 
 found=false;
 for i in ${prefix}${pattern}; do
-    case "${i}" in
-        "/${USER}:")
-            echo "FIXME: decode %sequences!"
-        *)
-            echo "/${i#${prefix}}";;
-    esac;
+    s="/${i#${prefix}}";
+    stat -c "%10A %8U %8G ${s} $(sem "${s}" -q -v0 2>/dev/null || echo '?')" "${i}";
     found=true;
 done;
 

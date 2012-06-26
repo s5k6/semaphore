@@ -25,5 +25,5 @@ sem-ls "${pattern}" || err "No semaphores matching ‘${pattern}’ found.";
 ask_yN "Remove all semaphores matching pattern ‘${pattern}’?";
 
 for i in ${prefix}${pattern}; do
-    sem /${i#${prefix}} -l -u -v;
+    sem /${i#${prefix}} -u -v;
 done;

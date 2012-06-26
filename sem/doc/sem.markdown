@@ -31,9 +31,10 @@ Usual invocation is the first form:
 The arguments being as follows:
 
 `‹name›`
-  ~ the name of the semaphore to operate on.  May contain slashes.
-    Global, and per-user names reside in different namespaces.  See
-    Notes on Names below.  Must be the first argument.
+  ~ the name of the semaphore to operate on.  If the name starts with
+    a slash, it is used literally.  Otherwise, semaphores reside in a
+    per-user namespace.  See Notes on Names, and `-g` below.  Must be
+    the first argument.
 
 `-- ‹command›…`
   ~ command to be executed, and its arguments.  This must be the last
@@ -64,9 +65,9 @@ The arguments being as follows:
     the semaphore is posted after the command terminates.
 
 `-f`
-  ~ fork into background after waiting, and run any command there.  In
-    this case, a post operation is also performed in the background,
-    after the command.
+  ~ fork into background after waiting, and run any command there.  A
+    post operation is also performed in the background, after the
+    command terminates.
 
 `-u`
   ~ unlink semaphore.  This happens after waiting, just before running
@@ -79,7 +80,7 @@ The arguments being as follows:
     user that will access the semaphore.
 
 `-g`
-  ~ generate a global name.  Without this option, the semaphore
+  ~ generate a global name.  Without this option, a semaphore should
     resides in a per-user namespace, see Notes on Names below.  Take
     care to also set the permissions correctly, see `-m`.
 
@@ -94,13 +95,10 @@ The arguments being as follows:
     seconds since the epoch.  Use the `date` command to calculate
     this, see examples.
 
-`-l`
-  ~ literally use the semaphore name, i.e., skip the naming magic
-    described in Notes on Names below.
-
 `-v ‹level›`
   ~ be verbose.  Sets the level of verbosity to the given value, or
-    increases by one if no value is given.
+    increases by one if no value is given.  The default level is 1, so
+    `-v0` is pretty quiet.
 
 `-q`
   ~ Query semaphore value, before performing any wait/post operation.
@@ -109,8 +107,8 @@ The arguments being as follows:
     for getting a rough idea while debugging!
 
 `-E ‹offset›`
-  ~ offset sem's exit codes by ‹offset›, but leave exit codes from the
-    ‹command› alone.  See Notes on Exit Codes below.
+  ~ offset `sem`'s exit codes by ‹offset›, but leave exit codes from
+    the ‹command› alone.  See Notes on Exit Codes below.
 
 `-V`
   ~ show version and license information, and exit.
@@ -126,39 +124,54 @@ must not contain further slashes.  The length is limited to 251
 characters.  The first restriction leads to name clashes between
 different users, the others are annoying.
 
-`sem` avoids name clashes by prefixing each semaphore name with the
-user's name (from the environment variable $USER) and a colon.  The
-`-g` option disables this, creating a “global” name.
+To this end, `sem` distinguishes between “user semaphore names” the
+user enters on the command line, and “system semaphore names” that are
+provided to the OS's semaphore system calls.
 
-To allow for colons and slashes in the names, `sem` performs a poor
-variant of url-escaping (aka. %-escaping).  Note, that this may
-significantly elongate the name.
+If the name provided to `sem` starts with a slash ‘/’, it is
+considered a system name, and used without further conversion.
+Otherwise, it is prefixed with the user's name (from the environment
+variable $USER) and a colon, unless `-g` is given.
 
-With `-v2`, the produced semaphore name is shown.  The option `-l`
-completely disables all conversions, and literally uses the semaphore
-name provided.
+To allow for colons and slashes in the names, user semaphore names
+undergo a poor variant of url-escaping (aka. %-escaping).  Note, that
+this may significantly elongate the name.
 
-Note, that the operating system may further mangle the semaphore
-name. The command `sem tool%mutex -i1 -v2` may invlove the following
-names (the user is named “sk”):
+With verbosity level 3 or higher (`-v3`), the system semaphore name is
+shown.
 
-    Name used by sem     :  tool%mutex
-    Real semaphore name  :  /sk:tool%25mutex
-    Name on file system  :  /dev/shm/sem.sk:tool%25mutex
+Note, that the operating system may further mangle the semaphore name.
+Under Linux, semaphores are stored under `/dev/shm/sem.*`.  The
+command `sem tool/mutex -i1 -v3` usually invloves the following names
+(the user is named “sk”):
 
-The `-l` argument only controls the first conversion, i.e., “sem
-/tool%mutex -l -i1” leads to:
+    user semaphore name  :  tool/mutex
+    system semaphore name:  /sk:tool%2fmutex
+    file system name     :  /dev/shm/sem.sk:tool%2fmutex
 
-    Name used by sem     :  /tool%mutex
-    Real semaphore name  :  /tool%mutex
-    Name on file system  :  /dev/shm/sem.tool%mutex
+With `-g`, a “global” semaphore is created, i.e., the name is not
+prefixed with the user's name.  Example `sem downloads.all -g -v3
+-i10`:
+
+    user semaphore name  :  downloads.all
+    system semaphore name:  /downloads.all
+    file system name     :  /dev/shm/sem.downloads.all
+
+If the first character of the provided name is a slash ‘/’, then `sem`
+falls back to system names, i.e., does not mangle the name on its own.
+Note, that no further slashes are allowed in the semaphore name in
+this case.  Hence, `sem /tool.mutex -i1` leads to
+
+    Name provided to sem :  /tool.mutex
+    Real semaphore name  :  /tool.mutex
+    Name on file system  :  /dev/shm/sem.tool.mutex
 
 Thus, permissions provided, you may use the following to remove all
 semaphores from your Linux system.
 
-    shopt -s nullglob; # see bash(1)
-    prefix='/dev/shm/sem.'; # see sem_overview(7)
-    for i in ${prefix}*; do sem /${i#${prefix}} -l -u -v; done;
+    shopt -s nullglob;         # see bash(1)
+    prefix='/dev/shm/sem.';    # see sem_overview(7)
+    for i in ${prefix}*; do sem /${i#${prefix}} -u -v; done;
 
 
 ## Notes on Exit Codes

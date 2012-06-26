@@ -1,7 +1,7 @@
 Extensive documentation is provided in sem(1) and as HTML file.
 
 sem ‹name›                                # semaphore name
-    [(-i|-I) ‹init›] [-g|-l] [-m ‹mode›]  # initialisation
+    [(-i|-I) ‹init›] [-g] [-m ‹mode›]     # initialisation
     [-t ‹secs› | -T ‹time›]               # try / timeout
     [-w|-p|-x] [-f] [-u]                  # wait, post / fork / unlink
     [-q] [-v ‹num›]                       # query / verbosity
