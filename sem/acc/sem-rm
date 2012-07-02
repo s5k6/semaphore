@@ -18,12 +18,12 @@ function ask_yN {
 
 prefix='/dev/shm/sem.'; # see sem_overview(7)
 
-pattern="${1:-*}";
+pattern="*${1:-}${1:+*}";
 
-sem-ls "${pattern}" || err "No semaphores matching ‘${pattern}’ found.";
-
-ask_yN "Remove all semaphores matching pattern ‘${pattern}’?";
-
+list='';
 for i in ${prefix}${pattern}; do
-    sem /${i#${prefix}} -u -v;
+    s="/${i#${prefix}}";
+    sem "${s}" -q
+    stat -c "%10A %8U %8G" "${i}";
+    ask_yN 'Remove?' && sem "${s}" -u;
 done;

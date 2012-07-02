@@ -7,14 +7,13 @@ function warn { echo "$@" >&2; }
 
 prefix='/dev/shm/sem.';   # see sem_overview(7)
 
-pattern="${1:-*}";
+pattern="*${1:-}${1:+*}";
 
 found=false;
 for i in ${prefix}${pattern}; do
     s="/${i#${prefix}}";
-    stat -c "%10A %8U %8G ${s} $(sem "${s}" -q -v0 2>/dev/null || echo '?')" "${i}";
+    echo "$(stat -c "%10A %8U %8G" "${i}") $(sem "${s}" -q -v0 2>/dev/null || echo '    ?') ${s}";
     found=true;
 done;
 
-${found} && exit 0;
-exit 1;
+${found} || err "No semaphores containing ‘${pattern}’ found.";

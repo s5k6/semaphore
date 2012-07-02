@@ -371,7 +371,7 @@ int main(int argc, char ** argv) {
       int sval;
       if (sem_getvalue(sem, &sval)) err(SysError, "sem_getvalue: %m.");
       if (verbose > 0) out("value = %i", sval);
-      else printf("%i", sval);
+      else printf("%5i", sval);
     }
   } else {
     if (!unlink) warn("Pointless usage without semaphore operation.");
