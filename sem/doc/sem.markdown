@@ -80,9 +80,10 @@ The arguments being as follows:
     user that will access the semaphore.
 
 `-g`
-  ~ generate a global name.  Without this option, a semaphore should
-    resides in a per-user namespace, see Notes on Names below.  Take
-    care to also set the permissions correctly, see `-m`.
+  ~ generate a global name.  Without this option a semaphore whose
+    name does not start with a slash resides in a per-user namespace,
+    see Notes on Names below.  Take care to also set the permissions
+    correctly, see `-m`.
 
 `-t ‹time›`
   ~ Without ‹time›, or if ‹time› equals 0, switch to nonblocking mode,
@@ -178,31 +179,32 @@ semaphores from your Linux system.
 
 If `sem` runs a command in the foreground, it tries to exit with the
 exit code of the command, or one of the following.  To disambiguate
-failure of `sem` from failure of the command, use `-E` to offset
-(i.e., add a constant value to) these codes.  See examples.
+failure of `sem` from failure of the command, use `-E ‹offset›` to
+offset (i.e., add a constant value to) these codes.  See examples.
+‹offset› defaults to 0.
 
-0
+0 
   ~ All actions have been carried out successfully, and the
-            command exited with 0.
+    command exited with 0.
 
-1
+1 + ‹offset›
   ~ Failed to wait due to timeout or in nonblocking mode.
 
-2
+2 + ‹offset›
   ~ Inappropriate usage of `sem`, i.e., usage error.
 
-3
+3 + ‹offset›
   ~ A systemcall failed.  A more detailed description is given
             in the error message.
 
-4
+4 + ‹offset›
   ~ An error in the implementation of `sem`.  You should not
             see this.
 
-5
+5 + ‹offset›
   ~ The command was killed by a signal.
 
-other
+‹other›
   ~ The command returned with the respective exit code.
 
 

@@ -206,7 +206,7 @@ int main(int argc, char ** argv) {
         
       case 'E':
         if (!v) err(UserError, "-%c requires offset.", o);
-        if (oflag) warn("-%c overwrites previous setting.", o);
+        if (offset) warn("-%c overwrites previous setting.", o);
         offset = strtol(v, &endptr, 10);
         if (*endptr || offset < 0)
           err(UserError, "-%c expects positive decimal integer.", o);
