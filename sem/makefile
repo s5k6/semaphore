@@ -4,11 +4,10 @@
 # version information
 
 version = $(shell cat VERSION)
-svnversion = $(shell svnversion)
 compiled_date = $(shell date)
 compiled_by = $(USER)@$(shell uname -n -o -m)
 
-export version svnversion compiled_by compiled_date
+export version compiled_by compiled_date
 
 
 # variables for install
@@ -29,7 +28,7 @@ export USER MODE GROUP PREFIX
 # variables for creating a package
 
 package = sem
-archname = $(package)-$(shell cat VERSION)r$(shell svnversion)
+archname = $(package)-$(shell cat VERSION)
 archfile = $(archname).tar.bz2
 
 
