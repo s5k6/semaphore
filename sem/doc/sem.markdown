@@ -262,6 +262,20 @@ semaphore named “foo”, and run the command “command”. We assume
     Since the waiting happens before invocation of the subshell,
     you'll never have more than 4 subshells running.
 
+    
+  * Imagine you want to trigger a command on a certain event, but avoid
+    event-bursts to trigger too many commands.  The usual way to do this
+    is:
+
+        sem foo -i1 -x -t -f -- command;
+
+    The return code tells whether the command was executed.  But is may
+    also make sense to throttle the triggering with a delay, i.e., make
+    sure that the command is not executed more often than once every,
+    say, 5 seconds:
+
+        sem foo -i1 -x -t -f -- sleep 5 && command;
+
 
   * If you want `sem` to bail out after waiting for one minute, use
 
