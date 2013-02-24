@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <semaphore.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,11 +30,18 @@
 
 
 
+/* `sem` should ignore some signals, and forward others to the child
+   process.  Unfortunately, forwarding des not yet work without
+   terminating `sem`. */
+
+int const sig_ign[] = { SIGHUP, SIGINT, 0 };
+int const sig_fwd[] = { 0 }; //{ SIGUSR1, 0 };
+
+
+
 /* All of sem's exit codes may be offset, to disambiguate from the
    command's error. */
 int offset = 0;
-
-
 
 void exit_offset(int const ec) {
   exit(ec + offset);
@@ -43,7 +51,9 @@ void exit_offset(int const ec) {
 
 
 
-char const * name = 0;
+
+char const * name = 0;  // semaphore name, req'd by error funcs
+pid_t pid; // child pid, req'd by signal handler
 
 
 
@@ -76,12 +86,13 @@ void err(int const ec, const char * fmt, ...) {
 #define vout DO_NOT_USE_VOUT
 
 
+
 /* Sorry again: I consider the argument processing implemented here
    superior to the GNU standard.  This is a feature, not a bug.
 
    Arguments for opt(argc, argv, &i, &o, &v):
 
-     - arc, argv from main(argc, argv)
+     - argc, argv from main(argc, argv)
 
      - i index of next arg to process
 
@@ -115,7 +126,6 @@ int opt(int const argc, char * const * const argv, int * i, char * o, char ** v)
 
 
 
-
 char const * encode(char const * in, int const global, int const verbose) {
 
   char * out = calloc(maxNameLen, sizeof(char));
@@ -142,6 +152,13 @@ char const * encode(char const * in, int const global, int const verbose) {
 
 
 
+void sig_forward(int const sig) {
+  warn("sending %i to pid=%i", sig, pid);
+  if (kill(pid, sig) != 0) warn("kill(%i,%i): %m", pid, sig);
+}
+
+
+
 int main(int argc, char ** argv) {
   
   char ** cmd = 0;
@@ -161,8 +178,7 @@ int main(int argc, char ** argv) {
   mode_t mode = 0600; // rw- for user alone
   sem_t * sem = 0;
   struct timespec time = { 0, 0 }; // holds absolute timeout time
-  pid_t pid;
-
+  
   // Argument processing
   {
     int i = 1; // first argv is sem name at index 1
@@ -435,13 +451,30 @@ int main(int argc, char ** argv) {
     if (pid < 0) err(SysError, "fork: %m.");
 
     if (pid == 0) {
-      if (verbose > 2) warn("Executing %s, with pid %i.", cmd[0], getpid());
+      if (verbose > 2) warn("Exec'ing %s, with pid %i.", cmd[0], getpid());
       execvp(cmd[0], cmd);
       err(SysError, "execvp(%s): %m.", cmd[0]);
     }
 
     // all the following stuff is run in the parent process, iff we have forked.
-      
+
+    // set up signal handling
+    {
+      //sigset_t  sigmask;
+      struct sigaction action;
+      int const * i;
+
+      sigfillset(&action.sa_mask);  
+      action.sa_handler = SIG_IGN;
+
+      for (i = sig_ign; *i; i++)
+        if (sigaction(*i, &action, 0) != 0) err(SysError, "sigaction: %m.");
+
+      action.sa_handler = &sig_forward;
+      for (i = sig_fwd; *i; i++)
+        if (sigaction(*i, &action, 0) != 0) err(SysError, "sigaction: %m.");
+    }
+    
     if (verbose > 1) warn("Waiting for process %i.", pid);
     waitpid(pid, &status, 0);
     if (verbose > 2) {
