@@ -30,12 +30,9 @@
 
 
 
-/* `sem` should ignore some signals, and forward others to the child
-   process.  Unfortunately, forwarding des not yet work without
-   terminating `sem`. */
-
-int const sig_ign[] = { SIGHUP, SIGINT, 0 };
-int const sig_fwd[] = { 0 }; //{ SIGUSR1, 0 };
+char const * name = 0;  // semaphore name, req'd by error funcs
+pid_t pid; // child pid, req'd by signal handler
+int verbose = 1; // print info to stdout
 
 
 
@@ -48,12 +45,6 @@ void exit_offset(int const ec) {
 }
 
 #define exit exit_offset
-
-
-
-
-char const * name = 0;  // semaphore name, req'd by error funcs
-pid_t pid; // child pid, req'd by signal handler
 
 
 
@@ -84,6 +75,23 @@ void err(int const ec, const char * fmt, ...) {
 }
 
 #define vout DO_NOT_USE_VOUT
+
+
+
+/* 0-terminated list of signals that should be ignored (sig_ign) by
+   `sem`, or forwarded (sig_fwd) to the child process.  These are
+   hard-coded, maybe there should be a CLI for changing them. */
+
+int const sig_ign[] = { SIGHUP, SIGINT, 0 };
+int const sig_fwd[] = { SIGQUIT, SIGTERM, SIGUSR1, SIGUSR2, SIGCONT
+                      , SIGTSTP, SIGTTIN, SIGTTOU, 0
+                      };
+
+void sig_forward(int const sig) {
+  if (verbose > 1)
+    warn("sending signal %i to pid=%i", sig, pid);
+  if (kill(pid, sig) != 0) warn("kill(%i,%i): %m", pid, sig);
+}
 
 
 
@@ -126,39 +134,6 @@ int opt(int const argc, char * const * const argv, int * i, char * o, char ** v)
 
 
 
-char const * encode(char const * in, int const global, int const verbose) {
-
-  char * out = calloc(maxNameLen, sizeof(char));
-  if (!out) err(SysError, "calloc: %m.");
-  out[0] = '/';
-  int pos = 1;
-  if (!global) {
-    char * user = getenv("USER");
-    if (!user) err(UserError, "Var $USER not in environment.  Try -g or -l.");
-    pos += snprintf(out + pos, maxNameLen - pos, "%s:", user);
-  }
-  for (char const * c = in; *c; c++) {
-    if (index(":/%?* ", *c))
-      pos += snprintf(out + pos, maxNameLen - pos, "%%%0x", *c);
-    else
-      pos += snprintf(out + pos, maxNameLen - pos, "%c", *c); 
-  }
-  if (verbose > 2) warn("Real (system) name is \"%s\".", out);
-  if (pos >= maxNameLen)
-    err(UserError, "Real (system) name exceeds %i bytes.", maxNameLen - 1);
-  
-  return out;
-}
-
-
-
-void sig_forward(int const sig) {
-  warn("sending %i to pid=%i", sig, pid);
-  if (kill(pid, sig) != 0) warn("kill(%i,%i): %m", pid, sig);
-}
-
-
-
 int main(int argc, char ** argv) {
   
   char ** cmd = 0;
@@ -171,7 +146,6 @@ int main(int argc, char ** argv) {
     , status = 0 // exit status of command
     , timeout = 0 // timeout in seconds
     , unlink = 0 // rm semaphore after wait
-    , verbose = 1 // print info to stdout
     , wait = 0 // wait before command
     ;
   unsigned int init = 0; // initial value for creation
@@ -372,10 +346,30 @@ int main(int argc, char ** argv) {
   if (name[0]=='/') {
     if (global) err(UserError, "System name conflicts with ‘-g’.");
     realName = name;
-  } else realName = encode(name, global, verbose);
+  } else {
+    char * out = calloc(maxNameLen, sizeof(char));
+    if (!out) err(SysError, "calloc: %m.");
+    out[0] = '/';
+    int pos = 1;
+    if (!global) {
+      char * user = getenv("USER");
+      if (!user) err(UserError, "Var $USER not in environment.  Try -g or -l.");
+      pos += snprintf(out + pos, maxNameLen - pos, "%s:", user);
+    }
+    for (char const * c = name; *c; c++) {
+      if (index(":/%?* ", *c))
+        pos += snprintf(out + pos, maxNameLen - pos, "%%%0x", *c);
+      else
+        pos += snprintf(out + pos, maxNameLen - pos, "%c", *c); 
+    }
+    if (verbose > 2) warn("Real (system) name is \"%s\".", out);
+    if (pos >= maxNameLen)
+      err(UserError, "Real (system) name exceeds %i bytes.", maxNameLen - 1);
+    realName = out;
+  }
 
   if (rindex(realName, '/') != realName)
-    err(UserError, "First character must be the slash in real semaphore name.");
+    err(ImplError, "First character must be slash in real semaphore name.");
 
   
   // open the semaphore
@@ -458,25 +452,26 @@ int main(int argc, char ** argv) {
 
     // all the following stuff is run in the parent process, iff we have forked.
 
-    // set up signal handling
-    {
+    { // set up signal handling
       //sigset_t  sigmask;
       struct sigaction action;
-      int const * i;
+      int const * sig;
 
-      sigfillset(&action.sa_mask);  
+      sigfillset(&action.sa_mask);
+      /* SA_RESTART undeclared, so use waitpid in while loop below
+         action.sa_flags = SA_RESTART; */
       action.sa_handler = SIG_IGN;
-
-      for (i = sig_ign; *i; i++)
-        if (sigaction(*i, &action, 0) != 0) err(SysError, "sigaction: %m.");
+      for (sig = sig_ign; *sig; sig++)
+        if (sigaction(*sig, &action, 0) != 0) err(SysError, "sigaction: %m.");
 
       action.sa_handler = &sig_forward;
-      for (i = sig_fwd; *i; i++)
-        if (sigaction(*i, &action, 0) != 0) err(SysError, "sigaction: %m.");
+      for (sig = sig_fwd; *sig; sig++)
+        if (sigaction(*sig, &action, 0) != 0) err(SysError, "sigaction: %m.");
     }
     
     if (verbose > 1) warn("Waiting for process %i.", pid);
-    waitpid(pid, &status, 0);
+    errno = EINTR;
+    while (errno == EINTR) waitpid(pid, &status, 0); // see SA_RESTART above
     if (verbose > 2) {
       if (WIFEXITED(status))
         warn("Child %i exited with code %d.", pid, WEXITSTATUS(status));
