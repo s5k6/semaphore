@@ -175,6 +175,25 @@ semaphores from your Linux system.
     for i in ${prefix}*; do sem /${i#${prefix}} -u -v; done;
 
 
+## Notes on Signals
+
+Pressing C-c sends SIGTERM to `sem`.  However, you probably don't want
+to terminate `sem` itself, but rather its child, and have `sem` post a
+semaphore as soon as the child dies.
+
+To this end, iff there is a child process, `sem` ignores the signals
+
+    SIGHUP, SIGINT
+
+and forwards the signals
+
+    SIGQUIT, SIGTERM, SIGUSR1, SIGUSR2,
+    SIGCONT, SIGTSTP, SIGTTIN, SIGTTOU
+
+to the child.  Signal handlers are installed only if there is a command
+to be run.
+
+
 ## Notes on Exit Codes
 
 If `sem` runs a command in the foreground, it tries to exit with the
@@ -195,11 +214,11 @@ offset (i.e., add a constant value to) these codes.  See examples.
 
 3 + ‹offset›
   ~ A systemcall failed.  A more detailed description is given
-            in the error message.
+    in the error message.
 
 4 + ‹offset›
   ~ An error in the implementation of `sem`.  You should not
-            see this.
+    see this.
 
 5 + ‹offset›
   ~ The command was killed by a signal.
