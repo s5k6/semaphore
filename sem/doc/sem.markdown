@@ -1,6 +1,6 @@
 % sem(1)
-% Stefan Klinger <http://stefan-klinger.de>
-% 2012-May-28
+% Stefan Klinger
+% $Date$
 
 
 # Name
