@@ -1,6 +1,7 @@
 
 // Feature Test Macro Requirements
-#define _POSIX_C_SOURCE 200112L
+//#define _POSIX_C_SOURCE 200112L
+#define _POSIX_C_SOURCE 200809L
 
 #include <ctype.h>
 #include <errno.h>
@@ -11,6 +12,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -357,7 +359,7 @@ int main(int argc, char ** argv) {
       pos += snprintf(out + pos, maxNameLen - pos, "%s:", user);
     }
     for (char const * c = name; *c; c++) {
-      if (index(":/%?* ", *c))
+      if (strchr(":/%?* ", *c))
         pos += snprintf(out + pos, maxNameLen - pos, "%%%0x", *c);
       else
         pos += snprintf(out + pos, maxNameLen - pos, "%c", *c); 
@@ -368,8 +370,8 @@ int main(int argc, char ** argv) {
     realName = out;
   }
 
-  if (rindex(realName, '/') != realName)
-    err(ImplError, "First character must be slash in real semaphore name.");
+  if (strrchr(realName, '/') != realName)
+    err(ImplError, "Invalid semaphore system name.");
 
   
   // open the semaphore
@@ -458,8 +460,7 @@ int main(int argc, char ** argv) {
       int const * sig;
 
       sigfillset(&action.sa_mask);
-      /* SA_RESTART undeclared, so use waitpid in while loop below
-         action.sa_flags = SA_RESTART; */
+      action.sa_flags = SA_RESTART;
       action.sa_handler = SIG_IGN;
       for (sig = sig_ign; *sig; sig++)
         if (sigaction(*sig, &action, 0) != 0) err(SysError, "sigaction: %m.");
@@ -471,7 +472,7 @@ int main(int argc, char ** argv) {
     
     if (verbose > 1) warn("Waiting for process %i.", pid);
     errno = EINTR;
-    while (errno == EINTR) waitpid(pid, &status, 0); // see SA_RESTART above
+    waitpid(pid, &status, 0);
     if (verbose > 2) {
       if (WIFEXITED(status))
         warn("Child %i exited with code %d.", pid, WEXITSTATUS(status));
@@ -510,10 +511,7 @@ int main(int argc, char ** argv) {
   if (sem && sem_close(sem)) warn("sem_close: %m.");
 
   if (WIFEXITED(status)) return WEXITSTATUS(status);
-  if (WIFSIGNALED(status)) {
-    warn("Command signalled with %i.", WTERMSIG(status));
-    return KilledError + offset;
-  }
+  if (WIFSIGNALED(status)) return KilledError + offset;
   
   return EXIT_SUCCESS + offset;
 }
