@@ -471,7 +471,6 @@ int main(int argc, char ** argv) {
     }
     
     if (verbose > 1) warn("Waiting for process %i.", pid);
-    errno = EINTR;
     waitpid(pid, &status, 0);
     if (verbose > 2) {
       if (WIFEXITED(status))

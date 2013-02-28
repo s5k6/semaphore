@@ -31,7 +31,7 @@ vpcc = gcc -std=c99 -Wall -Werror -O2
 
 .PHONY: all clean install
 
-all : sem
+all : sem killme
 
 clean :
 	rm -rf sem *.inc
@@ -48,3 +48,6 @@ sem : main.c short.inc license.inc
 
 %.inc : %.txt
 	cat $< | sed 's/"/\\"/g' | sed 's/.*/"&\\n"/' > $@
+
+killme : killme.c
+	$(vpcc) -o killme killme.c
