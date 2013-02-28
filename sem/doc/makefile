@@ -45,7 +45,7 @@ install : all
 # production rules
 
 sem.html : sem.markdown
-	pandoc -f markdown -t html -s --base-header-level=2 -o $@ $<
+	pandoc -f markdown -t html -s --base-header-level=2 --template=pandoc-template.xhtml -o $@ $<
 
 sem.1 : sem.markdown
 	pandoc -f markdown -t man -s -o $@ $<
