@@ -3,7 +3,7 @@
 
 # version information
 
-version ?= $(shell cat ../VERSION)
+version ?= $(shell cat ../VERSION) rev $(shell svnversion -n)
 compiled_date ?= $(shell date)
 compiled_by ?= $(USER)@$(shell uname -n -o -m)
 
