@@ -31,7 +31,7 @@ vpcc = gcc -std=c99 -Wall -Werror -O2
 
 .PHONY: all clean install
 
-all : sem killme
+all : sem
 
 clean :
 	rm -rf sem *.inc
