@@ -3,7 +3,7 @@
 
 # version information
 
-version = $(shell cat VERSION) rev $(shell svnversion -n)
+version = $(shell cat VERSION)-$(shell svnversion -n || echo exported)
 compiled_date = $(shell date)
 compiled_by = $(USER)@$(shell uname -n -o -m)
 
@@ -46,7 +46,6 @@ clean :
 	$(MAKE) -C doc $@
 
 dist : clean
-	svnversion | grep -vq 'M'
 	find . -name '.svn' -prune -o -name md5sum.txt -prune -o -type f -exec md5sum {} \; > md5sum.txt;
 	md5sum --quiet -c md5sum.txt;
 	tar --exclude-vcs --exclude '$(package)-*' --transform 's ^\. $(archname) g' -c . | bzip2 > "$(archfile)";
