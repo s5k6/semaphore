@@ -4,7 +4,6 @@
 # version information
 
 version ?= $(shell cat ../VERSION)
-svnversion ?= $(shell svnversion)
 compiled_date ?= $(shell date)
 compiled_by ?= $(USER)@$(shell uname -n -o -m)
 
@@ -43,7 +42,7 @@ install : all
 # production targets
 
 sem : main.c short.inc license.inc
-	$(vpcc) -o sem -DVERSION='"$(version)"' -DSVNVERSION='"$(svnversion)"' -DCOMPILED_DATE='"$(compiled_date)"' -DCOMPILED_BY='"$(compiled_by)"' main.c -lrt
+	$(vpcc) -o sem -DVERSION='"$(version)"' -DCOMPILED_DATE='"$(compiled_date)"' -DCOMPILED_BY='"$(compiled_by)"' main.c -lrt
 	strip sem
 
 %.inc : %.txt

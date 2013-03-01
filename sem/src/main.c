@@ -307,13 +307,9 @@ int main(int argc, char ** argv) {
       case 'V':
         printf( "\n"
                 "sem version %s\n"
-                "    svnversion: %s\n"
-                "compiled\n"
-                "    date: %s\n"
-                "    by: %s\n"
-                ""
+                "compiled %s by %s\n"
                 "\n"
-              , VERSION, SVNVERSION, COMPILED_DATE, COMPILED_BY
+              , VERSION, COMPILED_DATE, COMPILED_BY
               );
         exit(EXIT_SUCCESS);
         break;
