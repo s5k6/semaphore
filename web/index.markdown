@@ -1,12 +1,12 @@
 % Semaphore interface for the command line
 % Stefan Klinger
-% 2012-May-10
+% 2013-Feb-27
 
 
 Semaphore interface for the command line
 ========================================
 
-Copyright © 2012 Stefan Klinger <http://stefan-klinger.de>
+Copyright © 2012, 2013 Stefan Klinger <http://stefan-klinger.de>
 
 
 Abstract
@@ -21,7 +21,8 @@ avoids problems with concurrent initialisation.
 
 To allow for the protection of multiple commands in shell scripts, the
 level of operation is more primitive than [GNU
-sem](http://www.gnu.org/software/parallel/sem.html).
+sem](http://www.gnu.org/software/parallel/sem.html).  This also allows
+synchronisation of tasks across different scripts and even users.
 
 `sem` comes with some auxilliary shell scripts to further facilitate
 semaphore management on Linux.  The provided `barrier` script

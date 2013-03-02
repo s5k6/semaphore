@@ -3,7 +3,7 @@
 
 # version information
 
-version = $(shell cat VERSION)_$(shell cat REVISION 2>/dev/null || svnversion -n || echo modified)
+version = $(shell cat VERSION)r$(shell cat REVISION 2>/dev/null || svnversion -n || echo modified)
 compiled_date = $(shell date)
 compiled_by = $(USER)@$(shell uname -n -o -m)
 
