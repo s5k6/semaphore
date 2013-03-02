@@ -3,7 +3,7 @@
 
 # version information
 
-version = $(shell cat VERSION)-$(shell svnversion -n || echo exported)
+version = $(shell cat VERSION)_$(shell cat REVISION || svnversion -n || echo modified)
 compiled_date = $(shell date)
 compiled_by = $(USER)@$(shell uname -n -o -m)
 
@@ -42,6 +42,7 @@ all install :
 
 clean :
 	rm -f $(package)-* md5sum.txt
+	$(MAKE) -C tools $@
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 

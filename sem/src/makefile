@@ -1,9 +1,10 @@
 # /src/makefile
+# This file should be used in a recursive make run from /src.
 
 
 # version information
 
-version ?= $(shell cat VERSION)-$(shell svnversion -n || echo exported)
+version ?= (incomplete)
 compiled_date ?= $(shell date)
 compiled_by ?= $(USER)@$(shell uname -n -o -m)
 
@@ -47,6 +48,3 @@ sem : main.c short.inc license.inc
 
 %.inc : %.txt
 	cat $< | sed 's/"/\\"/g' | sed 's/.*/"&\\n"/' > $@
-
-killme : killme.c
-	$(vpcc) -o killme killme.c

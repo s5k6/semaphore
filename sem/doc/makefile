@@ -1,10 +1,10 @@
 # /doc/makefile
+# This file should be used in a recursive make run from /src.
 
 
 # version information
 
-version ?= $(shell cat ../VERSION)
-svnversion ?= $(shell svnversion)
+version ?= (incomplete)
 compiled_date ?= $(shell date)
 compiled_by ?= $(USER)@$(shell uname -n -o -m)
 
