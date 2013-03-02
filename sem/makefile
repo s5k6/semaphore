@@ -46,6 +46,7 @@ clean :
 	$(MAKE) -C doc $@
 
 dist :
+	rm -rf '$(archname)' '$(archname).tar.bz2'
 	svn export . '$(archname)'
 	svnversion > '$(archname)/REVISION'
 	find '$(archname)' -name md5sum.txt -prune -o -type f -exec md5sum {} \; | sed 's#$(archname)/##g' > '$(archname)/md5sum.txt'
