@@ -1,0 +1,3 @@
+This tool is used only to test the signal forwarding capabilities of
+`sem`.  `killme` tries to handle all signals, and prints out what it
+catches.  You'll have to shoot it to death with -9.

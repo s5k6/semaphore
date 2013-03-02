@@ -3,7 +3,7 @@
 
 # version information
 
-version = $(shell cat VERSION)_$(shell cat REVISION || svnversion -n || echo modified)
+version = $(shell cat VERSION)_$(shell cat REVISION 2>/dev/null || svnversion -n || echo modified)
 compiled_date = $(shell date)
 compiled_by = $(USER)@$(shell uname -n -o -m)
 
@@ -29,7 +29,6 @@ export USER MODE GROUP PREFIX
 
 package = sem
 archname = $(package)-$(shell cat VERSION)
-archfile = $(archname).tar.bz2
 
 
 # phony rules
@@ -41,12 +40,14 @@ all install :
 	$(MAKE) -C doc $@
 
 clean :
-	rm -f $(package)-* md5sum.txt
+	rm -rf $(package)-* md5sum.txt
 	$(MAKE) -C tools $@
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
 
-dist : clean
-	find . -name '.svn' -prune -o -name md5sum.txt -prune -o -type f -exec md5sum {} \; > md5sum.txt;
-	md5sum --quiet -c md5sum.txt;
-	tar --exclude-vcs --exclude '$(package)-*' --transform 's ^\. $(archname) g' -c . | bzip2 > "$(archfile)";
+dist :
+	svn export . '$(archname)'
+	svnversion > '$(archname)/REVISION'
+	find '$(archname)' -name md5sum.txt -prune -o -type f -exec md5sum {} \; | sed 's#$(archname)/##g' > '$(archname)/md5sum.txt'
+	cd '$(archname)' && md5sum --quiet -c md5sum.txt;
+	tar -c '$(archname)' | bzip2 > '$(archname).tar.bz2'
