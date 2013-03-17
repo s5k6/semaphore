@@ -43,7 +43,7 @@ install : all
 # production targets
 
 sem : main.c short.inc license.inc
-	$(vpcc) -o sem -DVERSION='"$(version)"' -DCOMPILED_DATE='"$(compiled_date)"' -DCOMPILED_BY='"$(compiled_by)"' main.c -lrt
+	$(vpcc) -o sem -DVERSION='"$(version)"' -DCOMPILED_DATE='"$(compiled_date)"' -DCOMPILED_BY='"$(compiled_by)"' main.c -lrt -pthread
 	strip sem
 
 %.inc : %.txt
