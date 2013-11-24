@@ -47,4 +47,5 @@ sem : main.c short.inc license.inc
 	strip sem
 
 %.inc : %.txt
-	cat $< | sed 's/"/\\"/g' | sed 's/.*/"&\\n"/' > $@
+	cat $< | sed 's/"/\\"/g; s/.*/"&\\n"/' > $@
+
