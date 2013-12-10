@@ -22,9 +22,9 @@ else
 endif
 
 
-# the c compiler
+# the very pick c compiler
 
-vpcc = gcc -std=c99 -Wall -Werror -O2
+vpcc = gcc -std=c99 -O2 -Wall -Werror -Wextra -Wpedantic -Wbad-function-cast -Wconversion -Wwrite-strings -Wstrict-prototypes
 
 
 # phony targets
