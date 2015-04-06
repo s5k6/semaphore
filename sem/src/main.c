@@ -57,7 +57,7 @@ void vout(FILE * stream, const char * fmt, va_list ap) {
   if (name) fprintf(stream, "sem[%i,%s] ", getpid(), name);
   else fprintf(stream, "sem[%i] ", getpid());
   vfprintf(stream, fmt, ap);
-  fprintf(stream, "\n"); 
+  fprintf(stream, "\n");
 }
 
 void out(const char * fmt, ...) {
@@ -137,7 +137,7 @@ int opt(int const argc, char * const * const argv, int * i, char * o, char ** v)
 
 
 int main(int argc, char ** argv) {
-  
+
   char ** cmd = 0;
   char const * realName = 0; // system name of semaphore
   int daemon = 0 // fork for command execution
@@ -150,11 +150,11 @@ int main(int argc, char ** argv) {
     , unlink = 0 // rm semaphore after wait
     , wait = 0 // wait before command
     ;
-  unsigned int init = 0; // initial value for creation
+  int init = 0; // initial value for creation
   mode_t mode = 0600; // rw- for user alone
   sem_t * sem = 0;
   struct timespec time = { 0, 0 }; // holds absolute timeout time
-  
+
   // Argument processing
   {
     int i = 1; // first argv is sem name at index 1
@@ -169,21 +169,21 @@ int main(int argc, char ** argv) {
              );
       exit(EXIT_SUCCESS);
     }
-    
+
     if (argv[i][0] != '-') name = argv[i++];
 
     while (opt(argc, argv, &i, &o, &v)) {
       switch (o) {
-        
+
       case '-':
         if (!v) err(UserError, "-%c requires command.", o);
         int const c = i-1;
-        cmd = calloc(argc-c+1, sizeof(char*)); // add  one for terminal null
+        cmd = calloc((size_t)(argc-c+1), sizeof(char*)); // add  one for terminal null
         if (!cmd) err(SysError, "calloc: %m.");
         cmd[0] = v;
         while (i < argc) { cmd[i-c] = argv[i]; i++; }
         break;
-        
+
       case 'i': case 'I':
         if (!v) err(UserError, "-%c requires initial value.", i-1, o);
         if (oflag) warn("-%c overwrites previous setting.", o);
@@ -191,25 +191,25 @@ int main(int argc, char ** argv) {
               ? O_CREAT
               : O_CREAT|O_EXCL
               ;
-        init = strtol(v, &endptr, 10);
+        init = (int)strtol(v, &endptr, 10);
         if (*endptr || init < 0)
           err(UserError, "-%c expects positive decimal integer.", o);
         break;
-        
+
       case 'E':
         if (!v) err(UserError, "-%c requires offset.", o);
         if (offset) warn("-%c overwrites previous setting.", o);
-        offset = strtol(v, &endptr, 10);
+        offset = (int)strtol(v, &endptr, 10);
         if (*endptr || offset < 0)
           err(UserError, "-%c expects positive decimal integer.", o);
         if (offset > 250)
           warn("Offset %i > 250, may distort exit code.", offset);
         break;
-        
+
       case 'm':
         if (!v) err(UserError, "-%c requires file mode.", o);
-        mode = strtol(v, &endptr, 8);
-        if (*endptr || 0666 < mode || mode < 0)
+        mode = (mode_t)strtol(v, &endptr, 8);
+        if (*endptr || 0666 < mode)
           err(UserError, "-%c expects octal integer in range 0..0666.", o);
         break;
 
@@ -223,12 +223,12 @@ int main(int argc, char ** argv) {
         present only if the group is to be set.  Note, that this
         operation is not atomic, and thus makes sense only with the
         ‘-I’ option.
-        
+
       case 'o':
         err(ImplError, "Arg %i: change of ownership not supported", i-1);
         break;
         */
-        
+
       case 'f':
         if (v) err(UserError, "-%c does not take arguments.", o);
         daemon = 1;
@@ -241,7 +241,7 @@ int main(int argc, char ** argv) {
       case 't':
         if (timeout) warn("-%c overwrites previous setting.", o);
         if (v) {
-          timeout = strtol(v, &endptr, 10);
+	        timeout = (int)strtol(v, &endptr, 10);
           if (*endptr || timeout < 0)
             err(UserError, "-%c takes optional positive decimal integer.", o);
         }
@@ -255,38 +255,38 @@ int main(int argc, char ** argv) {
       case 'T':
         if (timeout) warn("-%c overwrites previous setting.", o);
         if (!v) err(UserError, "-%c requires seconds since epoch.", o);
-        timeout = strtol(v, &endptr, 10);
+        timeout = (int)strtol(v, &endptr, 10);
         if (*endptr || timeout <= 0)
           err(UserError, "-%c takes positive decimal integer.", o);
         time.tv_sec = timeout;
         break;
-        
+
       case 'v':
         verbose++;
         if (v) {
-          verbose = strtol(v, &endptr, 0);
+	        verbose = (int)strtol(v, &endptr, 0);
           if (*endptr)
             err(UserError, "-%c takes optional integer value.", o);
         }
         break;
-        
+
       case 'u':
         if (v) err(UserError, "-%c does not take arguments.", o);
         unlink = 1;
         break;
-        
+
       case 'w':
         if (wait || post) warn("-%c overwrites previous setting.", o);
         if (v) err(UserError, "-%c does not take arguments.", o);
         wait = 1;
         break;
-        
+
       case 'p':
         if (wait || post) warn("-%c overwrites previous setting.", o);
         if (v) err(UserError, "-%c does not take arguments.", o);
         post = 1;
         break;
-        
+
       case 'x':
         if (wait || post) warn("-%c overwrites previous setting.", o);
         if (v) err(UserError, "-%c does not take arguments.", o);
@@ -338,27 +338,27 @@ int main(int argc, char ** argv) {
   if (!wait && timeout) err(UserError, "Specified timeout, but not waiting.");
 
 
-  
+
   // generate per-user, or global, or system name
 
   if (name[0]=='/') {
     if (global) err(UserError, "System name conflicts with ‘-g’.");
     realName = name;
   } else {
-    char * out = calloc(maxNameLen, sizeof(char));
+    char * out = calloc((size_t)maxNameLen, sizeof(char));
     if (!out) err(SysError, "calloc: %m.");
     out[0] = '/';
     int pos = 1;
     if (!global) {
       char * user = getenv("USER");
       if (!user) err(UserError, "Var $USER not in environment.  Try -g or -l.");
-      pos += snprintf(out + pos, maxNameLen - pos, "%s:", user);
+      pos += snprintf(out + pos, (size_t)(maxNameLen - pos), "%s:", user);
     }
     for (char const * c = name; *c; c++) {
       if (strchr(":/%?* ", *c))
-        pos += snprintf(out + pos, maxNameLen - pos, "%%%0x", *c);
+	      pos += snprintf(out + pos, (size_t)(maxNameLen - pos), "%%%0x", *c);
       else
-        pos += snprintf(out + pos, maxNameLen - pos, "%c", *c); 
+	      pos += snprintf(out + pos, (size_t)(maxNameLen - pos), "%c", *c);
     }
     if (verbose > 2) warn("Real (system) name is \"%s\".", out);
     if (pos >= maxNameLen)
@@ -369,9 +369,9 @@ int main(int argc, char ** argv) {
   if (strrchr(realName, '/') != realName)
     err(ImplError, "Invalid semaphore system name.");
 
-  
+
   // open the semaphore
-  
+
   if (wait || post || query || (oflag & O_CREAT)) {
     sem = sem_open(realName, oflag, mode, init);
     if (sem == SEM_FAILED) err(SysError, "sem_open: %m.");
@@ -388,7 +388,7 @@ int main(int argc, char ** argv) {
 
 
   // do the waiting
-  
+
   if (sem && wait) {
     if (timeout > 0) {
       if (verbose > 1) warn("Timed waiting...");
@@ -415,7 +415,7 @@ int main(int argc, char ** argv) {
 
 
   // daemonize
-  
+
   if (daemon) {
     if (cmd) {
       pid = fork();
@@ -424,7 +424,7 @@ int main(int argc, char ** argv) {
         exit(EXIT_SUCCESS);
       }
       if (pid < 0) err(SysError, "fork: %m.");
-      
+
       // fight zombies with a double fork
       pid = fork();
       if (pid > 0) exit(EXIT_SUCCESS);
@@ -465,7 +465,7 @@ int main(int argc, char ** argv) {
       for (sig = sig_fwd; *sig; sig++)
         if (sigaction(*sig, &action, 0) != 0) err(SysError, "sigaction: %m.");
     }
-    
+
     if (verbose > 1) warn("Waiting for process %i.", pid);
     waitpid(pid, &status, 0);
     if (verbose > 2) {
@@ -481,7 +481,7 @@ int main(int argc, char ** argv) {
 
 
   // post semaphore
-  
+
   if (sem && post) {
     if (sem_post(sem)) err(SysError, "sem_post: %m.");
     if (verbose > 1) warn("Posted.");
@@ -490,7 +490,7 @@ int main(int argc, char ** argv) {
 
 
   // unlink semaphore
-  
+
   if (unlink) {
     if (sem_unlink(realName)) {
       if (verbose > 0) warn("sem_unlink: %m.");
@@ -502,11 +502,11 @@ int main(int argc, char ** argv) {
 
 
   // close semaphore
-  
+
   if (sem && sem_close(sem)) warn("sem_close: %m.");
 
   if (WIFEXITED(status)) return WEXITSTATUS(status);
   if (WIFSIGNALED(status)) return KilledError + offset;
-  
+
   return EXIT_SUCCESS + offset;
 }
