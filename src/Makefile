@@ -1,30 +1,34 @@
-# /src/makefile
-# This file should be used in a recursive make run from /src.
-
-
 # version information
 
-version ?= (incomplete)
-compiled_date ?= $(shell date)
+version ?= $(shell git describe --dirty --always --tags || cat VERSION)
+compiled_date ?= $(shell date -Iseconds)
 compiled_by ?= $(USER)@$(shell uname -n -o -m)
+
+export version compiled_by compiled_date
 
 
 # variables for install
 
-ifeq ($(USER), root)
+ifeq ($(USER),root)
     MODE ?= 755
     GROUP ?= root
     PREFIX ?= /usr/local
 else
     MODE ?= 700
-    GROUP ?= $(shell groups | sed 's/ .*//g')
-    PREFIX ?= $(HOME)/opt
+    GROUP ?= $(shell id -gn)
+    PREFIX ?= $(HOME)/.local
 endif
+
+export USER MODE GROUP PREFIX 
 
 
 # the very pick c compiler
 
-vpcc = gcc -std=c99 -O2 -Wall -Werror -Wextra -Wpedantic -Wbad-function-cast -Wconversion -Wwrite-strings -Wstrict-prototypes
+vpcc = gcc -std=c99 -O2 -Wall -Werror -Wextra -Wpedantic -Wbad-function-cast \
+	-Wconversion -Wwrite-strings -Wstrict-prototypes
+
+versionflags = -DVERSION='"$(version)"' -DCOMPILED_DATE='"$(compiled_date)"' \
+	-DCOMPILED_BY='"$(compiled_by)"'
 
 
 # phony targets
@@ -43,9 +47,9 @@ install : all
 # production targets
 
 sem : main.c short.inc license.inc
-	$(vpcc) -o sem -DVERSION='"$(version)"' -DCOMPILED_DATE='"$(compiled_date)"' -DCOMPILED_BY='"$(compiled_by)"' main.c -lrt -pthread
+	$(vpcc) $(versionflags) -o sem main.c -lrt -pthread
 	strip sem
 
 %.inc : %.txt
-	cat $< | sed 's/"/\\"/g; s/.*/"&\\n"/' > $@
+	sed 's/"/\\"/g; s/.*/"&\\n"/' $< >$@
 

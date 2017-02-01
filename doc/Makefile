@@ -1,24 +1,22 @@
-# /doc/makefile
-# This file should be used in a recursive make run from /src.
-
-
 # version information
 
-version ?= (incomplete)
-compiled_date ?= $(shell date)
+version ?= $(shell git describe --dirty --always --tags || cat VERSION)
+compiled_date ?= $(shell date -Iseconds)
 compiled_by ?= $(USER)@$(shell uname -n -o -m)
+
+export version compiled_by compiled_date
 
 
 # variables for install
 
-ifeq ($(USER), root)
+ifeq ($(USER),root)
     MODE ?= 755
     GROUP ?= root
     PREFIX ?= /usr/local
 else
     MODE ?= 700
-    GROUP ?= $(shell groups | sed 's/ .*//g')
-    PREFIX ?= $(HOME)/opt
+    GROUP ?= $(shell id -gn)
+    PREFIX ?= $(HOME)/.local
 endif
 
 export USER MODE GROUP PREFIX 
@@ -44,8 +42,8 @@ install : all
 
 # production rules
 
-sem.html : sem.markdown
+sem.html : sem.md pandoc-template.xhtml
 	pandoc -f markdown -t html -s --base-header-level=2 --template=pandoc-template.xhtml -o $@ $<
 
-sem.1 : sem.markdown
+sem.1 : sem.md
 	pandoc -f markdown -t man -s -o $@ $<
