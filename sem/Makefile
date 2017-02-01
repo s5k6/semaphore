@@ -25,13 +25,6 @@ endif
 export USER MODE GROUP PREFIX 
 
 
-# variables for creating a package
-
-package = sem
-archname = $(package)-$(version)
-
-
-# phony rules
 
 .PHONY: all clean dist install
 
