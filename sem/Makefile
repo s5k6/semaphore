@@ -3,8 +3,8 @@
 
 # version information
 
-version = $(shell cat VERSION)r$(shell cat REVISION 2>/dev/null || svnversion -n || echo modified)
-compiled_date = $(shell date)
+version = $(shell git describe --dirty --always --tags || cat VERSION)
+compiled_date = $(shell date -Iseconds)
 compiled_by = $(USER)@$(shell uname -n -o -m)
 
 export version compiled_by compiled_date
@@ -19,7 +19,7 @@ ifeq ($(USER), root)
 else
     MODE ?= 700
     GROUP ?= $(shell groups | sed 's/ .*//g')
-    PREFIX ?= $(HOME)/opt
+    PREFIX ?= $(HOME)/.local
 endif
 
 export USER MODE GROUP PREFIX 
@@ -28,7 +28,7 @@ export USER MODE GROUP PREFIX
 # variables for creating a package
 
 package = sem
-archname = $(package)-$(shell cat VERSION)
+archname = $(package)-$(version)
 
 
 # phony rules
@@ -44,11 +44,3 @@ clean :
 	$(MAKE) -C tools $@
 	$(MAKE) -C src $@
 	$(MAKE) -C doc $@
-
-dist :
-	rm -rf '$(archname)' '$(archname).tar.bz2'
-	svn export . '$(archname)'
-	svnversion > '$(archname)/REVISION'
-	find '$(archname)' -name md5sum.txt -prune -o -type f -exec md5sum {} \; | sed 's#$(archname)/##g' > '$(archname)/md5sum.txt'
-	cd '$(archname)' && md5sum --quiet -c md5sum.txt;
-	tar -c '$(archname)' | bzip2 > '$(archname).tar.bz2'
